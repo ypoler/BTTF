@@ -1,0 +1,229 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<title>BTTF year randomizer</title>
+</head>
+
+<script type="text/javascript">
+	const MAX_NUM_RANDOM_REPEATS = 25;		/* Number of iterations */
+	const RANDOM_DELAY_INTERVAL = 400;		/* Delay between numbers switch */
+	const RANDOMIZER_NOT_STARTED = (-1);	/* Mark that randomizer isn't running */
+	
+	var yearsArr = null;						/* Years read from file in array */
+	var randomIters = RANDOMIZER_NOT_STARTED;	/* random iterations counter */
+
+	
+	/* Translate digit to picture image name */
+	function chooseImage(str)
+	{
+		switch (str)
+		{
+		case "0":
+			return "glow-green-0.png";
+		case "1":
+			return "glow-green-1.png";
+		case "2":
+			return "glow-green-2.png";
+		case "3":
+			return "glow-green-3.png";
+		case "4":
+			return "glow-green-4.png";
+		case "5":
+			return "glow-green-5.png";
+		case "6":
+			return "glow-green-6.png";
+		case "7":
+			return "glow-green-7.png";
+		case "8":
+			return "glow-green-8.png";
+		case "9":
+			return "glow-green-9.png";
+		default:
+			return "empty.png";
+		}
+	}
+	
+	/* Display the year number + alternate ("A" suffix) indication */
+	function showNumber(str)
+	{
+		var imgD1 = document.getElementById('D1');
+		var imgD2 = document.getElementById('D2');
+		var imgD3 = document.getElementById('D3');
+		var imgD4 = document.getElementById('D4');
+		var imgD5 = document.getElementById('D5');
+
+		if (str.length < 4)	return;	/* Bail out on too short strings */
+
+		/* Replace the digit images */
+		imgD1.src = chooseImage(str[0]);
+		imgD2.src = chooseImage(str[1]);
+		imgD3.src = chooseImage(str[2]);
+		imgD4.src = chooseImage(str[3]);
+		
+		/* If "A" (alternate) - display the AM/PM leds on */
+		if ( (str.length == 5) && (str[4] == "A") )
+		{
+			imgD5.src = "alternate_on.png";
+		}
+		else
+		{
+			imgD5.src = "alternate_off.png";
+		}
+	}
+	
+	/* Randomize an index from the years array and display it - if needed, re-run another iteration */
+	function randomizeIdx()
+	{
+		if (yearsArr.length == 0)
+		{
+			alert("What?! no more years!");
+		}
+		
+		var idx = Math.floor( Math.random() * yearsArr.length );	/* Get a line index */
+		showNumber(yearsArr[idx]);
+		
+		/* Run the randomizer only 25 times (25*400ms = 10sec) */
+		randomIters++;
+		if (randomIters <= MAX_NUM_RANDOM_REPEATS)
+		{
+			setTimeout(randomizeIdx, RANDOM_DELAY_INTERVAL);
+		}
+		else
+		{
+			randomIters = RANDOMIZER_NOT_STARTED;
+			yearsArr.splice(idx, 1);	/* Remove the chosen index, so won't repeat again */
+		}
+	}
+	
+	/* Event triggered when reader is complete - load the text file content */
+	function fileReaderLoaded(e)
+	{
+		var reader = e.currentTarget;
+		yearsArr = reader.result.split(/[\r\n]+/g);		// tolerate both Windows and Unix linebreaks
+
+		randomIters = 0;
+		randomizeIdx();
+	}
+
+	/* Load the file into text-lines (final load done on onload event) */
+	function loadTextfileLines()
+	{
+		var fileInput = document.getElementById('fileInput');
+		var reader = new FileReader();
+	
+		var file = fileInput.files[0];
+		try
+		{
+			reader.readAsText(file);
+			reader.onload = fileReaderLoaded;
+		}
+		catch (err)
+		{
+			alert(err.message);
+		}	
+	}
+	
+	/* Start reading process */
+	function activateRandomizer()
+	{
+		/* If randomizer already activated, exit */
+		if (randomIters != RANDOMIZER_NOT_STARTED)
+		{
+			return;
+		}
+		else if (yearsArr == null)
+		{
+			/* Load the file for the first time */
+			loadTextfileLines();
+		}
+		else
+		{
+			/* Continue another 25 itertaions of random */
+			randomIters = 0;
+			randomizeIdx();		
+		}
+	}
+	
+	/* Hide buttons from screen (activation will be done by clicking the green year digits) */
+	function hideButtons()
+	{
+		/* Hide the buttons first */
+		document.getElementById('fileInput').style.visibility = "hidden";
+		document.getElementById('randButton').style.visibility = "hidden";
+
+		/* If instructions wasn't closed yet, hide now */
+		document.getElementById('instructions').style.visibility = "hidden";
+	}
+	
+	function hideInstructions()
+	{
+		document.getElementById('instructions').style.visibility = "hidden";
+	}
+</script>
+
+<style>
+body 
+{
+    background-image: url("back-to-the-future-2015-i3.jpg");
+    background-repeat: no-repeat;
+	background-color: grey;
+	background-position: center top
+}
+</style>
+
+<body>
+
+<table cellpadding="0" cellspacing="0" border="0" align="center" width="500">
+	<tr>
+		<td height="241" colspan="8"><img src="empty.png" height="1" width="1" /></td>
+	</tr>
+	<tr>
+		<td width="165"><img src="empty.png" width="1" height="1" /></td>
+		<td width="54" valign="top">
+			<img id="D1" src="glow-green-8.png" width="44" height="72" onclick="activateRandomizer()" />
+		</td>
+		<td width="54" valign="top">
+			<img id="D2" src="glow-green-8.png" width="44" height="72" onclick="activateRandomizer()" />
+		</td>
+		<td width="54" valign="top">
+			<img id="D3" src="glow-green-8.png" width="44" height="72" onclick="activateRandomizer()" />
+		</td>
+		<td width="54" valign="top">
+			<img id="D4" src="glow-green-8.png" width="44" height="72" onclick="activateRandomizer()" />
+		</td>
+		<td width="5" valign="top">
+			<img src="empty.png" height="1" height="1" />
+		</td>
+		<td width="47">
+			<img id="D5" src="alternate_off.png" />
+		</td>
+		<td><img src="empty.png" height="1" height="1" /></td>
+	</tr>
+	<tr>
+		<td colspan="7" align="center">
+			<br/><br/>
+		</td>
+	</tr>
+</table>
+
+<p align="center" style="position:fixed; width:100%; bottom:0px;">
+	<input id="fileInput" type="file" accept=".txt"> 
+	<button id="randButton" onclick="hideButtons()">Hide buttons</button>
+</p>
+
+<p id="instructions" style="background-color:yellow; position:fixed; width:70%; top:10%; left:15%; z-index:1; padding:30px">
+	<b>Instructions:</b>
+	<br/><br/>
+	1. Maximize the browser screen (using F11)
+	<br/>
+	2. Press the "browse..." button and choose the years text file
+	<br/>
+	3. Press "Hide buttons"
+	<br/>
+	4. When the lottery starts, click on either digit in the "present time" year (green digits in the middle) - the random years will start running for 10sec
+	<br/><br/>
+	<button onclick="hideInstructions()">Hide instructions</button>
+</p>
+
+</body>
+</html>
